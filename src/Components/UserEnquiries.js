@@ -9,7 +9,7 @@ import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import { motion } from "framer-motion";
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const UserEnquiries = () => {
   const [enquiries, setEnquiries] = useState([]);

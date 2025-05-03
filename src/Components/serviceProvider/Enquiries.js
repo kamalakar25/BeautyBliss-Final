@@ -26,7 +26,7 @@ const Enquiries = () => {
 
 
   // Base URL for API (adjust if your backend is hosted elsewhere)
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   // Fetch enquiries from backend using Axios
   useEffect(() => {

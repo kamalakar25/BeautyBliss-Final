@@ -189,7 +189,7 @@ const BookSlot = () => {
     if (!parlor.email) return;
     try {
       const response = await axios.get(
-        `${BASE_URL}/api/admin/parlor/${encodeURIComponent(parlor.email)}`
+        `${BASE_URL}/api/admin/parlor/${parlor.email}`
       );
       const parlorData = response.data;
       if (
@@ -246,7 +246,7 @@ const BookSlot = () => {
   const fetchManPower = async () => {
     try {
       const response = await axios.get(
-        `${BASE_URL}/api/admin/get-manpower/${encodeURIComponent(parlor.email)}`
+        `${BASE_URL}/api/admin/get-manpower/${parlor.email}`
       );
       setManPower(response.data);
     } catch (error) {

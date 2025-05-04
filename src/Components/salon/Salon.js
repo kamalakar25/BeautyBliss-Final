@@ -1137,7 +1137,7 @@ const SalonPage = () => {
           },
           transition: "all 0.3s ease",
         }}
-        onClick={() => navigate("/products")}
+       onClick={() => navigate('/products', { state: { designation: 'Salon' } })}
       >
         {/* <BookOnlineIcon sx={{ mr: 1 }} /> */}
         Book

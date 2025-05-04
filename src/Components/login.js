@@ -18,8 +18,8 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useNavigate } from 'react-router-dom';
 
-
 const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 // Define the keyframes for form animation
 const formAnimation = keyframes`
   from {
@@ -202,7 +202,6 @@ const Login = () => {
         alert(data.message || 'Login failed');
       }
     } catch (err) {
-      // console.error('Login error:', err);
       alert('Server error');
     } finally {
       setIsLoading(false);
@@ -245,9 +244,8 @@ const Login = () => {
     },
     '& .MuiInputBase-input::placeholder': { color: '#0e0f0f', opacity: 0.6 },
     '& .MuiInputLabel-root': { color: '#0e0f0f', '&.Mui-focused': { color: '#201548' } },
-    '& .MuiFormHelperText-root': { color: '#F44336' }, // Error text kept red for clarity
+    '& .MuiFormHelperText-root': { color: '#F44336' },
   };
-
 
   const buttonSx = {
     height: 56,
@@ -255,14 +253,14 @@ const Login = () => {
     border: '2px solid #201548',
     color: '#ffffff',
     backgroundColor: '#201548',
-    fontSize: { xs: '14px', sm: '16px'},
+    fontSize: { xs: '14px', sm: '16px' },
     cursor: 'pointer',
     transformStyle: 'preserve-3d',
     transform: 'rotateX(-10deg)',
     transition: 'all 0.3s ease-in-out',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2), 0px 7px 13px -3px rgba(0, 0, 0, 0.1) ',
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2), 0px 7px 13px -3px rgba(0, 0, 0, 0.1)',
     '&:hover': {
-      backgroundColor: '#1a1138', // Darker shade for hover
+      backgroundColor: '#1a1138',
       fontSize: { xs: '15px', sm: '17px' },
       boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
       transform: 'scale(1.05) rotateY(20deg) rotateX(10deg)',
@@ -271,14 +269,14 @@ const Login = () => {
       backgroundColor: '#cccccc',
       color: '#666666',
       borderColor: '#cccccc',
-      transform: 'rotateX(-10deg)'
+      transform: 'rotateX(-10deg)',
     },
   };
 
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        height: '100vh', 
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -286,7 +284,12 @@ const Login = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: { xs: 'scroll', md: 'fixed' },
-        position: 'relative',
+        position: 'fixed', // Prevent scrolling by fixing to viewport
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden', // No scrolling
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -306,7 +309,7 @@ const Login = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
-            padding: { xs: '20px', sm: '30px' },
+            padding: { xs: '15px', sm: '20px' }, // Reduced padding to fit smaller screens
             backgroundColor: '#ffffff',
             borderRadius: '10px',
             perspective: '1000px',
@@ -314,9 +317,10 @@ const Login = () => {
             transition: 'all 0.3s ease-in-out',
             boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2), 0px 7px 13px -3px rgba(0, 0, 0, 0.1)',
             animation: `${formAnimation} 0.5s ease-in-out`,
-            width: { xs: '90vw', sm: '400px' },
-            maxWidth: '450px',
-            marginTop: '20px',
+            width: { xs: '85vw', sm: '400px' }, // Slightly smaller width for mobile
+            maxWidth: '400px',
+            maxHeight: '80vh', // Limit form height to fit within viewport
+            overflowY: 'auto', // Allow internal scrolling if needed, but outer box prevents it
           }}
         >
           <style>
@@ -358,10 +362,10 @@ const Login = () => {
                       ...buttonSx,
                       backgroundColor: selectedRole === role ? '#201548' : '#ffffff',
                       color: selectedRole === role ? '#ffffff' : '#201548',
-                  borderColor: '#201548',
+                      borderColor: '#201548',
                       '&:hover': {
                         backgroundColor: selectedRole === role ? '#1a1138' : '#f5f5f5',
-                    color: selectedRole === role ? '#ffffff' : '#201548',
+                        color: selectedRole === role ? '#ffffff' : '#201548',
                       },
                     }}
                   >

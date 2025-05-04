@@ -9,6 +9,7 @@ const Approvals = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [providersPerPage] = useState(5);
+  const [loadingStates, setLoadingStates] = useState({}); // Track loading state for each provider
 
   useEffect(() => {
     axios
@@ -18,6 +19,7 @@ const Approvals = () => {
         setLoading(false);
       })
       .catch((err) => {
+        console.error('Error fetching providers:', err);
         setLoading(false);
       });
   }, []);
@@ -25,12 +27,17 @@ const Approvals = () => {
   const handleApprove = (id) => {
     const isConfirmed = window.confirm('Are you sure you want to approve this service provider?');
     if (isConfirmed) {
+      setLoadingStates((prev) => ({ ...prev, [id]: true })); // Set loading state for this provider
       axios
         .post(`${BASE_URL}/api/main/admin/service-providers/approve/${id}`)
         .then((res) => {
           setProviders((prev) => prev.filter((provider) => provider._id !== id));
+          setLoadingStates((prev) => ({ ...prev, [id]: false })); // Clear loading state
         })
-        .catch((err) => console.error('Error approving provider:', err));
+        .catch((err) => {
+          console.error('Error approving provider:', err);
+          setLoadingStates((prev) => ({ ...prev, [id]: false })); // Clear loading state on error
+        });
     }
   };
 
@@ -65,6 +72,115 @@ const Approvals = () => {
         background: 'linear-gradient(180deg, #ffffff 0%, #E8ECEF 100%)',
       }}
     >
+      {/* Dot Spinner CSS */}
+      <style>
+        {`
+          .dot-spinner {
+            --uib-size: 2.8rem;
+            --uib-speed: .9s;
+            --uib-color: #183153;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            height: var(--uib-size);
+            width: var(--uib-size);
+          }
+
+          .dot-spinner__dot {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100%;
+            width: 100%;
+          }
+
+          .dot-spinner__dot::before {
+            content: '';
+            height: 20%;
+            width: 20%;
+            border-radius: 50%;
+            background-color: var(--uib-color);
+            transform: scale(0);
+            opacity: 0.5;
+            animation: pulse0112 calc(var(--uib-speed) * 1.111) ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(18, 31, 53, 0.3);
+          }
+
+          .dot-spinner__dot:nth-child(2) {
+            transform: rotate(45deg);
+          }
+
+          .dot-spinner__dot:nth-child(2)::before {
+            animation-delay: calc(var(--uib-speed) * -0.875);
+          }
+
+          .dot-spinner__dot:nth-child(3) {
+            transform: rotate(90deg);
+          }
+
+          .dot-spinner__dot:nth-child(3)::before {
+            animation-delay: calc(var(--uib-speed) * -0.75);
+          }
+
+          .dot-spinner__dot:nth-child(4) {
+            transform: rotate(135deg);
+          }
+
+          .dot-spinner__dot:nth-child(4)::before {
+            animation-delay: calc(var(--uib-speed) * -0.625);
+          }
+
+          .dot-spinner__dot:nth-child(5) {
+            transform: rotate(180deg);
+          }
+
+          .dot-spinner__dot:nth-child(5)::before {
+            animation-delay: calc(var(--uib-speed) * -0.5);
+          }
+
+          .dot-spinner__dot:nth-child(6) {
+            transform: rotate(225deg);
+          }
+
+          .dot-spinner__dot:nth-child(6)::before {
+            animation-delay: calc(var(--uib-speed) * -0.375);
+          }
+
+          .dot-spinner__dot:nth-child(7) {
+            transform: rotate(270deg);
+          }
+
+          .dot-spinner__dot:nth-child(7)::before {
+            animation-delay: calc(var(--uib-speed) * -0.25);
+          }
+
+          .dot-spinner__dot:nth-child(8) {
+            transform: rotate(315deg);
+          }
+
+          .dot-spinner__dot:nth-child(8)::before {
+            animation-delay: calc(var(--uib-speed) * -0.125);
+          }
+
+          @keyframes pulse0112 {
+            0%,
+            100% {
+              transform: scale(0);
+              opacity: 0.5;
+            }
+
+            50% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
+
       <Box
         sx={{
           width: '100%',
@@ -371,6 +487,7 @@ const Approvals = () => {
                       >
                         <Button
                           onClick={() => handleApprove(provider._id)}
+                          disabled={loadingStates[provider._id]} // Disable button when loading
                           sx={{
                             p: '10px 20px',
                             fontSize: '0.9rem',
@@ -384,6 +501,10 @@ const Approvals = () => {
                             boxShadow: 'inset 2px 2px 5px rgba(255,255,255,0.2), inset -2px -2px 5px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15)',
                             transition: 'all 0.4s ease',
                             letterSpacing: '0.5px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
                             '&:hover': {
                               background: 'linear-gradient(135deg, #ffffff, #ffffff)',
                               color: '#0e0f0f',
@@ -404,6 +525,12 @@ const Approvals = () => {
                                 animation: 'ripple 0.8s linear',
                               },
                             },
+                            '&:disabled': {
+                              opacity: 0.6,
+                              cursor: 'not-allowed',
+                              transform: 'none',
+                              boxShadow: 'none',
+                            },
                             '@keyframes ripple': {
                               to: {
                                 width: '300px',
@@ -413,7 +540,20 @@ const Approvals = () => {
                             },
                           }}
                         >
-                          Approve
+                          {loadingStates[provider._id] ? (
+                            <div className="dot-spinner">
+                              <div className="dot-spinner__dot"></div>
+                              <div className="dot-spinner__dot"></div>
+                              <div className="dot-spinner__dot"></div>
+                              <div className="dot-spinner__dot"></div>
+                              <div className="dot-spinner__dot"></div>
+                              <div className="dot-spinner__dot"></div>
+                              <div className="dot-spinner__dot"></div>
+                              <div className="dot-spinner__dot"></div>
+                            </div>
+                          ) : (
+                            'Approve'
+                          )}
                         </Button>
                         <Button
                           onClick={() => handleReject(provider._id)}

@@ -369,6 +369,8 @@ const RevenuePage = () => {
                       type="date"
                       value={fromDate}
                       onChange={(e) => setFromDate(e.target.value)}
+                      min={fromDate || undefined}
+                      max={new Date().toISOString().split('T')[0]}
                       sx={{
                         p: '10px',
                         borderRadius: '8px',

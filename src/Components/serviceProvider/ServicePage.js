@@ -100,7 +100,7 @@ const ServicePage = () => {
         const response = await axios.get(`${BASE_URL}/api/users/role/${email}`);
         setRole(response.data.role);
       } catch (error) {
-        console.error("Error fetching role:", error);
+        // console.error("Error fetching role:", error);
       }
     };
     getRole();
@@ -114,7 +114,7 @@ const ServicePage = () => {
       );
       setServices(response.data.reverse());
     } catch (error) {
-      console.error("Error fetching services:", error);
+      // console.error("Error fetching services:", error);
     }
   };
 
@@ -196,7 +196,7 @@ const ServicePage = () => {
         setCurrentPage(1);
       }
     } catch (error) {
-      console.error("Error adding service:", error);
+      // console.error("Error adding service:", error);
     }
   };
 
@@ -235,7 +235,7 @@ const ServicePage = () => {
         setShowSuccess(true);
       }
     } catch (error) {
-      console.error("Error updating service:", error);
+      // console.error("Error updating service:", error);
     }
   };
 
@@ -260,7 +260,7 @@ const ServicePage = () => {
           setCurrentPage(currentPage - 1);
         }
       } catch (error) {
-        console.error("Error deleting service:", error);
+        // console.error("Error deleting service:", error);
       }
     }, 1000);
   };
@@ -300,7 +300,7 @@ const ServicePage = () => {
         alert("Please add employee first.");
       }
     } catch (error) {
-      console.error("Error checking employees:", error);
+      // console.error("Error checking employees:", error);
       alert("Something went wrong. Please try again.");
     }
   };
@@ -417,10 +417,10 @@ const ServicePage = () => {
                   className="image-preview"
                   onError={(e) => {
                     e.target.src = "/images/placeholder.jpg";
-                    console.error(
-                      "Error loading preview image:",
-                      formData.imagePreview
-                    );
+                    // console.error(
+                    //   "Error loading preview image:",
+                    //   formData.imagePreview
+                    // );
                   }}
                 />
               )}
@@ -890,10 +890,10 @@ const ServicePage = () => {
                           className="service-image"
                           onError={(e) => {
                             e.target.src = "/images/placeholder.jpg";
-                            console.error(
-                              "Error loading image:",
-                              svc.shopImage
-                            );
+                            // console.error(
+                            //   "Error loading image:",
+                            //   svc.shopImage
+                            // );
                           }}
                         />
                       ) : (

@@ -64,7 +64,7 @@ const BookNowButton = () => {
               transform: 'translateX(100%)',
             },
           }}
-          onClick={() => navigate('/products', { state: { designation: 'Doctor' } })}
+          onClick={() => navigate('/products', { state: { designation: 'Beauty_Parler' } })}
         >
           <BookOnlineIcon sx={{ mr: 1, fontSize: { xs: '1rem', sm: '1.2rem' } }} />
           Book Now

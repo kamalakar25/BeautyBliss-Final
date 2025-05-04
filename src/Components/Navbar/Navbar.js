@@ -83,7 +83,7 @@ const Navbar = () => {
           </li>
           <li style={{ '--i': 4 }}>
             <Link to="/skincare" className={isActiveLink('/skincare')} onClick={handleLinkClick}>
-              <b>Skincare</b>
+              <b>Doctor</b>
             </Link>
           </li>
           <li style={{ '--i': 5 }}>
@@ -257,7 +257,7 @@ const Navbar = () => {
                 className={isActiveLink("/skincare")}
                 onClick={handleLinkClick}
               >
-                <b>Skincare</b>
+                <b>Doctor</b>
               </Link>
             </li>
             <li style={{ "--i": 5 }}>

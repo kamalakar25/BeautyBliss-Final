@@ -141,7 +141,7 @@ const Login = () => {
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
     if (role === 'Admin') {
-      setForm({ identifier: 'admin@gmail.com', password: 'Admin@123' });
+      setForm({ identifier: '', password: '' });
       setErrors({ identifier: '', password: '' });
     } else {
       setForm({ identifier: '', password: '' });

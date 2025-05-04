@@ -36,7 +36,7 @@ import Pay from './Components/Pay';
 import PaymentCallback from './Components/PaymentCallback';
 import ForgotPassword from './Components/ForgotPassword';
 import UserEnquiries from './Components/UserEnquiries';
-import LocationPage from './Components/salon/LocationPage';
+
 
 function PageLayout({ children }) {
   return (
@@ -105,7 +105,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={["User"]} />}>
             <Route path="/Payments" element={<PaymentHistory />} />
             <Route path="/bookings" element={<BookingPage />} />
-            <Route path="/location" element={<LocationPage />} />
+      
             <Route path="/UserEnquiries" element={<UserEnquiries />} />
           </Route>
 

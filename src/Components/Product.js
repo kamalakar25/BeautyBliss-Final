@@ -16,6 +16,15 @@ import {
   IconButton,
   Modal,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import axios from "axios";
@@ -23,51 +32,94 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import { motion } from "framer-motion";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
 // Styled components (unchanged)
-const StyledCard = styled(Card)(({ theme }) => ({
-  "&:hover": {
-    transform: "translateY(-5px)",
-    boxShadow: theme.shadows[8],
-  },
-  transition: "transform 0.3s, box-shadow 0.3s",
-  width: "100%",
-  maxWidth: { xs: "300px", sm: "340px", md: "360px" },
-  height: "auto",
+const StyledListItem = styled(ListItem)(({ theme }) => ({
   background: "#ffffff",
-  color: "#0e0f0f",
   borderRadius: "12px",
-  overflow: "hidden",
+  marginBottom: theme.spacing(1.5),
+  padding: theme.spacing(1.5),
+  height: "auto",
+  maxHeight: "120px",
+  boxShadow: "0 4px 14px rgba(0, 0, 0, 0.1)",
+  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+  borderLeft: `4px solid ${getRandomLightColor()}`,
+  "&:hover": {
+    transform: "translateY(-4px)",
+    boxShadow: "0 6px 18px rgba(0, 0, 0, 0.15)",
+  },
   [theme.breakpoints.down("sm")]: {
-    maxWidth: "280px",
+    padding: theme.spacing(1.2),
+    maxHeight: "100px",
   },
-  [theme.breakpoints.down(360)]: {
-    maxWidth: "260px",
+  [`@media (max-width: 360px)`]: {
+    padding: theme.spacing(1),
+    maxHeight: "90px",
+  },
+  [`@media (max-width: 320px)`]: {
+    padding: theme.spacing(0.8),
+    maxHeight: "185px",
+  },
+  [`@media (max-width: 599.995px)`]: {
+    padding: theme.spacing(0.8),
+    maxHeight: "185px",
+  },
+  [`@media (max-width: 1450px)`]: {
+    padding: theme.spacing(0.8),
+    maxHeight: "185px",
   },
 }));
 
-const BookButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "#201548",
-  color: "#ffffff",
-  "&:hover": {
-    backgroundColor: "#1a1138",
+const getRandomLightColor = () => {
+  const colors = [
+    "#FFCCCB",
+    "#CCFFCC",
+    "#CCDDFF",
+    "#FFEECC",
+    "#DDCCFF",
+    "#CCFFFF",
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
+const StyledAvatar = styled(Avatar)(({ theme }) => ({
+  width: 70,
+  height: 70,
+  borderRadius: "10px",
+  objectFit: "cover",
+  [theme.breakpoints.down("sm")]: {
+    width: 55,
+    height: 55,
   },
-  fontSize: { xs: "0.75rem", sm: "0.875rem" },
-  padding: { xs: "6px 12px", sm: "8px 16px" },
-  borderRadius: "8px",
+  [`@media (max-width: 360px)`]: {
+    width: 50,
+    height: 50,
+  },
+  [`@media (max-width: 320px)`]: {
+    width: 45,
+    height: 45,
+  },
 }));
 
-const DirectionButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "#201548",
-  color: "#ffffff",
+const ActionButton = styled(IconButton)(({ theme }) => ({
+  color: "#201548",
   "&:hover": {
-    backgroundColor: "#1a1138",
+    backgroundColor: "#f5f5f5",
   },
-  fontSize: { xs: "0.75rem", sm: "0.875rem" },
-  padding: { xs: "6px 12px", sm: "8px 16px" },
-  borderRadius: "8px",
+  padding: theme.spacing(1),
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(0.8),
+  },
+  [`@media (max-width: 360px)`]: {
+    padding: theme.spacing(0.6),
+  },
+  [`@media (max-width: 320px)`]: {
+    padding: theme.spacing(0.5),
+  },
 }));
 
 const ModalContent = styled(Box)(({ theme }) => ({
@@ -80,45 +132,65 @@ const ModalContent = styled(Box)(({ theme }) => ({
   backgroundColor: "#ffffff",
   color: "#0e0f0f",
   boxShadow: theme.shadows[24],
-  padding: { xs: 2, sm: 4 },
-  borderRadius: "12px",
+  padding: theme.spacing(3),
+  borderRadius: "16px",
   display: "flex",
   flexDirection: "column",
-  gap: 2,
+  gap: theme.spacing(2),
   [theme.breakpoints.down("sm")]: {
     width: "95%",
-    maxWidth: 320,
+    maxWidth: 340,
+    padding: theme.spacing(2.5),
+  },
+  [`@media (max-width: 360px)`]: {
+    width: "98%",
+    maxWidth: 310,
+    padding: theme.spacing(2),
+  },
+  [`@media (max-width: 320px)`]: {
+    width: "98%",
+    maxWidth: 290,
+    padding: theme.spacing(1.5),
   },
 }));
 
 const FilterContainer = styled(Box)(({ theme }) => ({
   background: "#ffffff",
-  borderRadius: theme.shape.borderRadius,
-  boxShadow: theme.shadows[4],
-  padding: theme.spacing(2),
-  marginBottom: theme.spacing(4),
+  borderRadius: "12px",
+  boxShadow: "0 4px 14px rgba(0, 0, 0, 0.1)",
+  padding: theme.spacing(2.5),
+  marginBottom: theme.spacing(3.5),
   display: "flex",
   flexWrap: "wrap",
   gap: theme.spacing(2),
   justifyContent: "center",
   alignItems: "center",
   [theme.breakpoints.down("sm")]: {
-    padding: theme.spacing(1.5),
+    padding: theme.spacing(2),
     gap: theme.spacing(1.5),
+  },
+  [`@media (max-width: 360px)`]: {
+    padding: theme.spacing(1.5),
+    gap: theme.spacing(1),
+  },
+  [`@media (max-width: 320px)`]: {
+    padding: theme.spacing(1.2),
+    gap: theme.spacing(0.8),
   },
 }));
 
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
   minWidth: 150,
   backgroundColor: "#ffffff",
-  borderRadius: theme.shape.borderRadius,
+  borderRadius: "8px",
   "& .MuiInputBase-root": {
     backgroundColor: "#ffffff",
-    borderRadius: theme.shape.borderRadius,
+    borderRadius: "8px",
   },
   "& .MuiInputLabel-root": {
-    fontSize: { xs: "0.875rem", sm: "1rem" },
+    fontSize: "0.9rem",
     color: "#201548",
+    paddingLeft: theme.spacing(1),
   },
   "& .MuiSelect-icon": {
     color: "#201548",
@@ -129,21 +201,29 @@ const StyledFormControl = styled(FormControl)(({ theme }) => ({
     },
   },
   [theme.breakpoints.down("sm")]: {
-    minWidth: 120,
+    minWidth: 130,
+  },
+  [`@media (max-width: 360px)`]: {
+    minWidth: 110,
+  },
+  [`@media (max-width: 320px)`]: {
+    minWidth: 100,
   },
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
-  minWidth: { xs: 200, sm: 300 },
+  minWidth: { xs: 210, sm: 300 },
   backgroundColor: "#ffffff",
-  borderRadius: theme.shape.borderRadius,
+  borderRadius: "8px",
   "& .MuiInputBase-input": {
-    fontSize: { xs: "0.875rem", sm: "1rem" },
+    fontSize: "0.9rem",
     color: "#0e0f0f",
+    padding: theme.spacing(1.5),
   },
   "& .MuiInputLabel-root": {
-    fontSize: { xs: "0.875rem", sm: "1rem" },
+    fontSize: "0.9rem",
     color: "#201548",
+    paddingLeft: theme.spacing(1),
   },
   "& .MuiOutlinedInput-root": {
     "& fieldset": {
@@ -156,6 +236,15 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
       borderColor: "#201548",
     },
   },
+  [theme.breakpoints.down("sm")]: {
+    minWidth: 190,
+  },
+  [`@media (max-width: 360px)`]: {
+    minWidth: 170,
+  },
+  [`@media (max-width: 320px)`]: {
+    minWidth: 150,
+  },
 }));
 
 const StyledResetButton = styled(Button)(({ theme }) => ({
@@ -164,9 +253,22 @@ const StyledResetButton = styled(Button)(({ theme }) => ({
   "&:hover": {
     backgroundColor: "#1a1138",
   },
-  fontSize: { xs: "0.75rem", sm: "0.875rem" },
-  padding: theme.spacing(1, 2),
+  fontSize: "0.85rem",
+  padding: theme.spacing(1.2, 2.5),
   borderRadius: "8px",
+  textTransform: "none",
+  [theme.breakpoints.down("sm")]: {
+    fontSize: "0.8rem",
+    padding: theme.spacing(1, 2),
+  },
+  [`@media (max-width: 360px)`]: {
+    fontSize: "0.75rem",
+    padding: theme.spacing(0.8, 1.5),
+  },
+  [`@media (max-width: 320px)`]: {
+    fontSize: "0.7rem",
+    padding: theme.spacing(0.7, 1.2),
+  },
 }));
 
 const FilterToggleButton = styled(IconButton)(({ theme }) => ({
@@ -178,6 +280,65 @@ const FilterToggleButton = styled(IconButton)(({ theme }) => ({
     "&:hover": {
       backgroundColor: "#f5f5f5",
     },
+    padding: theme.spacing(1),
+  },
+  [`@media (max-width: 360px)`]: {
+    padding: theme.spacing(0.8),
+  },
+  [`@media (max-width: 320px)`]: {
+    padding: theme.spacing(0.6),
+  },
+}));
+
+const EnquiryButton = styled(Button)(({ theme }) => ({
+  backgroundColor: "#201548",
+  color: "#ffffff",
+  "&:hover": {
+    backgroundColor: "#1a1138",
+  },
+  fontSize: "0.85rem",
+  padding: theme.spacing(1.2, 2.5),
+  borderRadius: "8px",
+  textTransform: "none",
+  [theme.breakpoints.down("sm")]: {
+    fontSize: "0.8rem",
+    padding: theme.spacing(1, 2),
+  },
+  [`@media (max-width: 360px)`]: {
+    fontSize: "0.75rem",
+    padding: theme.spacing(0.8, 1.5),
+  },
+  [`@media (max-width: 320px)`]: {
+    fontSize: "0.7rem",
+    padding: theme.spacing(0.7, 1.2),
+  },
+}));
+
+const SendEnquiryButton = styled(Button)(({ theme }) => ({
+  backgroundColor: "#201548",
+  color: "#ffffff",
+  "&:hover": {
+    backgroundColor: "#1a1138",
+  },
+  "&.Mui-disabled": {
+    backgroundColor: "#cccccc",
+    color: "#666666",
+  },
+  fontSize: "0.85rem",
+  padding: theme.spacing(1, 2.5),
+  borderRadius: "8px",
+  textTransform: "none",
+  [theme.breakpoints.down("sm")]: {
+    fontSize: "0.8rem",
+    padding: theme.spacing(0.8, 2),
+  },
+  [`@media (max-width: 360px)`]: {
+    fontSize: "0.75rem",
+    padding: theme.spacing(0.7, 1.5),
+  },
+  [`@media (max-width: 320px)`]: {
+    fontSize: "0.7rem",
+    padding: theme.spacing(0.6, 1.2),
   },
 }));
 
@@ -193,7 +354,6 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     isNaN(lat2) ||
     isNaN(lon2)
   ) {
-    // console.warn("Invalid coordinates:", { lat1, lon1, lat2, lon2 });
     return null;
   }
   const R = 6371;
@@ -212,25 +372,32 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 const parseParlorLocation = (location) => {
   if (!location || typeof location !== "string") {
-    // console.warn(`Invalid or missing location: ${location}`);
     return null;
   }
   const match = location.match(/Lat:\s*([\d.-]+),\s*Lon:\s*([\d.-]+)/i);
   if (!match) {
-    // console.warn(`Invalid location format: ${location}`);
     return null;
   }
   const lat = parseFloat(match[1]);
   const lon = parseFloat(match[2]);
   if (isNaN(lat) || isNaN(lon)) {
-    // console.warn(`Invalid coordinates: Lat=${match[1]}, Lon=${match[2]}`);
     return null;
   }
   return { lat, lon };
 };
 
-// ParlorCard component (unchanged)
-const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
+// Fisher-Yates shuffle function for randomizing non-prioritized cards
+const shuffleArray = (array) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
+// ParlorListItem component (unchanged)
+const ParlorListItem = ({ parlor, onImageClick, userLocation }) => {
   const navigate = useNavigate();
   const [openModal, setOpenModal] = useState(false);
   const [credentials, setCredentials] = useState({
@@ -251,7 +418,6 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
       return "Please set your location";
     }
     if (!parlor.location) {
-      // console.log("Missing parlor location:", parlor);
       return "Unknown";
     }
     const parlorCoords = parseParlorLocation(parlor.location);
@@ -263,7 +429,6 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
       parlorCoords.lon
     );
     if (distance === null) {
-      // console.warn(`Distance calculation failed for parlor: ${parlor.name}`);
       return "Unknown";
     }
     return `${distance} km`;
@@ -314,12 +479,11 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
         localStorage.setItem("userRole", "User");
         handleCloseModal();
         navigate("/bookslot", { state: { parlor } });
-        window.location.reload(); // Reload the page
+        window.location.reload();
       } else {
         setError(data.message || "Login failed");
       }
     } catch (err) {
-      // console.error("Login error:", err);
       setError(err.response?.data?.message || "Server error");
     }
   };
@@ -345,7 +509,6 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
         handleOpenModal();
       }
     } catch (error) {
-      // console.error("Login check failed:", error);
       alert(`Something went wrong: ${error.message || error}`);
       handleOpenModal();
     }
@@ -353,116 +516,148 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
 
   return (
     <>
-      <StyledCard sx={{ m: { xs: 1, sm: 2 } }}>
-        <CardMedia
-          component="img"
-          height="180"
-          image={parlor.image}
-          alt={parlor.name}
-          onClick={() => onImageClick(parlor)}
-          sx={{ cursor: "pointer", objectFit: "cover" }}
+      <StyledListItem
+        onClick={handleBooking}
+        sx={{ cursor: "pointer" }}
+      >
+        <ListItemAvatar>
+          <StyledAvatar src={parlor.image} alt={parlor.name} />
+        </ListItemAvatar>
+        <ListItemText
+          primary={
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: "bold",
+                color: "#0e0f0f",
+                fontSize: { xs: "0.9rem", sm: "1rem", md: "1.1rem" },
+                paddingLeft: "12px",
+                [`@media (max-width: 360px)`]: {
+                  fontSize: "0.85rem",
+                },
+                [`@media (max-width: 320px)`]: {
+                  fontSize: "0.8rem",
+                },
+              }}
+            >
+              {parlor.name}
+            </Typography>
+          }
+          secondary={
+            <Box sx={{ paddingLeft: "12px" }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#0e0f0f",
+                  fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
+                  lineHeight: 1.4,
+                  [`@media (max-width: 360px)`]: {
+                    fontSize: "0.75rem",
+                  },
+                  [`@media (max-width: 320px)`]: {
+                    fontSize: "0.7rem",
+                  },
+                }}
+              >
+                {parlor.designation} | {parlor.service}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#201548",
+                  fontWeight: "bold",
+                  fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
+                  lineHeight: 1.4,
+                  [`@media (max-width: 360px)`]: {
+                    fontSize: "0.75rem",
+                  },
+                  [`@media (max-width: 320px)`]: {
+                    fontSize: "0.7rem",
+                  },
+                }}
+              >
+                ₹{parlor.price} | {parlor.style}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
+                    color: "#0e0f0f",
+                    lineHeight: 1.4,
+                    [`@media (max-width: 360px)`]: {
+                      fontSize: "0.75rem",
+                    },
+                    [`@media (max-width: 320px)`]: {
+                      fontSize: "0.7rem",
+                    },
+                  }}
+                >
+                  {parlor.spRating}
+                </Typography>
+                <i
+                  className="fa fa-star"
+                  style={{
+                    marginLeft: "6px",
+                    color: "#fbc02d",
+                    fontSize: "0.9rem",
+                    [`@media (max-width: 360px)`]: {
+                      fontSize: "0.75rem",
+                    },
+                    [`@media (max-width: 320px)`]: {
+                      fontSize: "0.7rem",
+                    },
+                  }}
+                ></i>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
+                    ml: 1,
+                    color: "#0e0f0f",
+                    lineHeight: 1.4,
+                    [`@media (max-width: 360px)`]: {
+                      fontSize: "0.75rem",
+                    },
+                    [`@media (max-width: 320px)`]: {
+                      fontSize: "0.7rem",
+                    },
+                  }}
+                >
+                  ({parlor.countPeople} Ratings)
+                </Typography>
+              </Box>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
+                  color: "#0e0f0f",
+                  lineHeight: 1.4,
+                  [`@media (max-width: 360px)`]: {
+                    fontSize: "0.75rem",
+                  },
+                  [`@media (max-width: 320px)`]: {
+                    fontSize: "0.7rem",
+                  },
+                }}
+              >
+                Distance: {getDistanceDisplay()}
+              </Typography>
+            </Box>
+          }
         />
-        <CardContent sx={{ p: 2 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: { xs: "1rem", sm: "1.1rem", md: "1.1rem" },
-              fontWeight: "bold",
-              color: "#0e0f0f",
-              lineHeight: 1.2,
-              mb: 1,
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <ActionButton
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(getGoogleMapsUrl(parlor.location), "_blank");
             }}
+            size="small"
           >
-            {parlor.name}
-          </Typography>
-          {/* // Typography (Designation and Service) */}
-          <Typography
-            variant="body2"
-            sx={{
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              color: "#0e0f0f",
-              mb: 0.5,
-            }}
-          >
-            {parlor.designation} | {parlor.service}
-          </Typography>
-          {/* // Typography (Price and Style) */}
-          <Typography
-            variant="body2"
-            sx={{
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              color: "#201548",
-              fontWeight: "bold",
-            }}
-          >
-            ₹{parlor.price} | {parlor.style}
-          </Typography>
-          {/* // Rating Box */}
-          <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-            <Typography
-              variant="body2"
-              sx={{
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                color: "#0e0f0f",
-              }}
-            >
-              {parlor.spRating}
-            </Typography>
-            <i
-              className="fa fa-star"
-              style={{ marginLeft: "4px", color: "#fbc02d" }}
-            ></i>
-            <Typography
-              variant="body2"
-              sx={{
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                ml: 1,
-                color: "#0e0f0f",
-              }}
-            >
-              ({parlor.countPeople} Ratings)
-            </Typography>
-          </Box>
-          {/* // Distance Typography */}
-          <Typography
-            variant="body2"
-            sx={{
-              mt: 0.5,
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              color: "#0e0f0f",
-            }}
-          >
-            Distance: {getDistanceDisplay()}
-          </Typography>
-          <Box
-            sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "center" }}
-          >
-            <BookButton
-              size="small"
-              onClick={handleBooking}
-              sx={{
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                px: { xs: 1.5, sm: 2 },
-              }}
-            >
-              Book
-            </BookButton>
-            <DirectionButton
-              size="small"
-              onClick={() =>
-                window.open(getGoogleMapsUrl(parlor.location), "_blank")
-              }
-              startIcon={<i className="fa fa-location-dot"></i>}
-              sx={{
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                px: { xs: 1.5, sm: 2 },
-              }}
-            >
-              Direction
-            </DirectionButton>
-          </Box>
-        </CardContent>
-      </StyledCard>
+            <LocationOnIcon sx={{ fontSize: { xs: "1.2rem", sm: "1.3rem", md: "1.4rem" }, [`@media (max-width: 320px)`]: { fontSize: "1.1rem" } }} />
+          </ActionButton>
+        </Box>
+      </StyledListItem>
 
       <Modal
         open={openModal}
@@ -472,18 +667,24 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
           backdropFilter: "blur(5px)",
         }}
       >
-        <ModalContent
-          sx={{
-            backgroundColor: "rgb(255, 245, 255)",
-            padding: { xs: "16px", sm: "20px" },
-          }}
-        >
+        <ModalContent>
           <Typography
             id="login-modal-title"
             variant="h5"
             component="h2"
             textAlign="center"
-            sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" }, color: "#0e0f0f" }}
+            sx={{
+              fontSize: { xs: "1.3rem", sm: "1.4rem", md: "1.5rem" },
+              color: "#0e0f0f",
+              fontWeight: "bold",
+              paddingBottom: "8px",
+              [`@media (max-width: 360px)`]: {
+                fontSize: "1.2rem",
+              },
+              [`@media (max-width: 320px)`]: {
+                fontSize: "1.1rem",
+              },
+            }}
           >
             User Login
           </Typography>
@@ -497,7 +698,17 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
               fullWidth
               margin="normal"
               required
-              sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
+              sx={{
+                "& .MuiInputBase-input": {
+                  padding: "12px",
+                  fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                  [`@media (max-width: 320px)`]: { fontSize: "0.8rem" },
+                },
+                "& .MuiInputLabel-root": {
+                  fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                  [`@media (max-width: 320px)`]: { fontSize: "0.8rem" },
+                },
+              }}
             />
             <TextField
               label="Password"
@@ -518,13 +729,27 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
                   </InputAdornment>
                 ),
               }}
-              sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
+              sx={{
+                "& .MuiInputBase-input": {
+                  padding: "12px",
+                  fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                  [`@media (max-width: 320px)`]: { fontSize: "0.8rem" },
+                },
+                "& .MuiInputLabel-root": {
+                  fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                  [`@media (max-width: 320px)`]: { fontSize: "0.8rem" },
+                },
+              }}
             />
             {error && (
               <Typography
                 color="error"
                 variant="body2"
-                sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                sx={{
+                  fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                  padding: "8px 12px",
+                  [`@media (max-width: 320px)`]: { fontSize: "0.75rem" },
+                }}
               >
                 {error}
               </Typography>
@@ -535,14 +760,22 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
                 style={{
                   textDecoration: "none",
                   color: "#201548",
-                  fontSize: { xs: "12px", sm: "14px" },
+                  fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                  padding: "4px 12px",
+                  [`@media (max-width: 320px)`]: { fontSize: "0.75rem" },
                 }}
               >
                 Forgot Password?
               </Link>
             </Box>
             <Box
-              sx={{ display: "flex", gap: 2, mt: 2, justifyContent: "center" }}
+              sx={{
+                display: "flex",
+                gap: 2,
+                mt: 2,
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
             >
               <Button
                 type="submit"
@@ -551,7 +784,11 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
                   backgroundColor: "#201548",
                   color: "#ffffff",
                   "&:hover": { backgroundColor: "#1a1138" },
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                  padding: { xs: "8px 20px", sm: "10px 24px" },
+                  borderRadius: "8px",
+                  textTransform: "none",
+                  [`@media (max-width: 320px)`]: { fontSize: "0.75rem", padding: "6px 16px" },
                 }}
               >
                 Sign In
@@ -563,20 +800,24 @@ const ParlorCard = ({ parlor, onImageClick, userLocation }) => {
                   borderColor: "#201548",
                   color: "#201548",
                   "&:hover": { borderColor: "#1a1138", color: "#1a1138" },
-                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                  padding: { xs: "8px 20px", sm: "10px 24px" },
+                  borderRadius: "8px",
+                  textTransform: "none",
+                  [`@media (max-width: 320px)`]: { fontSize: "0.75rem", padding: "6px 16px" },
                 }}
               >
                 Cancel
               </Button>
             </Box>
-
-            {/* // Sign Up Link */}
             <Typography
               textAlign="center"
               sx={{
-                fontSize: { xs: "12px", sm: "14px" },
+                fontSize: { xs: "0.8rem", sm: "0.85rem" },
                 mt: 2,
                 color: "#0e0f0f",
+                padding: "8px 12px",
+                [`@media (max-width: 320px)`]: { fontSize: "0.75rem" },
               }}
             >
               Don't have an account?{" "}
@@ -671,15 +912,134 @@ const Product = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [locationInput, setLocationInput] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
+  const [enquiryMessage, setEnquiryMessage] = useState("");
+  const [serviceProviders, setServiceProviders] = useState([]);
+  const [selectedDesignation, setSelectedDesignation] = useState("");
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const autocompleteInputRef = useRef(null);
+  const modalRef = useRef(null);
 
   useGoogleMapsAutocomplete(
     autocompleteInputRef,
     setLocationInput,
     setUserLocation
   );
+
+  // Fetch service providers and filter by distance when enquiry modal opens
+  useEffect(() => {
+    if (enquiryModalOpen && userLocation) {
+      const fetchServiceProviders = async () => {
+        try {
+          const response = await axios.get(
+            `${BASE_URL}/api/main/admin/get/all/service-providers`
+          );
+          const parsedProviders = response.data.map((provider) => ({
+            _id: provider._id || "",
+            shopName: provider.shopName || "No Name",
+            designation: provider.designation || "Salon",
+            location: provider.location || null,
+            spRating: parseFloat(provider.spRating) || 0,
+            email: provider.email || "No Email",
+          }));
+          const filteredProviders = parsedProviders.filter((provider) => {
+            const providerCoords = parseParlorLocation(provider.location);
+            if (!providerCoords) return false;
+            const distance = calculateDistance(
+              userLocation.lat,
+              userLocation.lon,
+              providerCoords.lat,
+              providerCoords.lon
+            );
+            return distance !== null && distance <= 5;
+          });
+          console.log("Filtered service providers:", filteredProviders);
+          setServiceProviders(filteredProviders);
+        } catch (error) {
+          console.error("Failed to fetch service providers:", error);
+          setServiceProviders([]);
+        }
+      };
+      fetchServiceProviders();
+    } else if (enquiryModalOpen && !userLocation) {
+      setServiceProviders([]);
+    }
+  }, [enquiryModalOpen, userLocation]);
+
+  // Handle enquiry submission to providers of selected designation
+  const handleSubmitEnquiry = async () => {
+    const email = localStorage.getItem("email");
+    if (!email) {
+      alert("Please login to submit an enquiry.");
+      navigate("/login");
+      return;
+    }
+    if (!enquiryMessage) {
+      alert("Please enter a message to send the enquiry.");
+      return;
+    }
+    if (!selectedDesignation) {
+      alert("Please select a designation to send the enquiry.");
+      return;
+    }
+
+    const filteredProviders = serviceProviders.filter(
+      (provider) => provider.designation === selectedDesignation
+    );
+
+    if (filteredProviders.length === 0) {
+      alert(
+        `No service providers available within 5 km for ${selectedDesignation}.`
+      );
+      return;
+    }
+
+    try {
+      const promises = filteredProviders.map((provider) =>
+        axios.post(`${BASE_URL}/api/users/enquiries`, {
+          parlorEmail: provider.email,
+          message: enquiryMessage,
+          email,
+        })
+      );
+
+      const responses = await Promise.all(promises);
+
+      const allSuccessful = responses.every(
+        (response) => response.status === 201
+      );
+
+      if (allSuccessful) {
+        setSuccessDialogOpen(true);
+      } else {
+        alert("Some enquiries failed to send. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error submitting enquiries:", error);
+      alert("Failed to send enquiries. Please try again.");
+    }
+  };
+
+  const handleSuccessDialogClose = () => {
+    setSuccessDialogOpen(false);
+    handleCloseModal();
+  };
+
+  const handleCloseModal = () => {
+    setEnquiryModalOpen(false);
+    setEnquiryMessage("");
+    setSelectedDesignation("");
+  };
+
+  const handleEnquiryButtonClick = () => {
+    if (!userLocation) {
+      alert("Please set your location to proceed with the enquiry.");
+      return;
+    }
+    setEnquiryModalOpen(true);
+  };
 
   const roleOptions = {
     Salon: ["HairCut", "Facial", "HairColor", "Shaving"],
@@ -730,6 +1090,7 @@ const Product = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Fetch service providers
   useEffect(() => {
     setLoading(true);
     axios
@@ -749,13 +1110,16 @@ const Product = () => {
           designation: item.designation || "Salon",
           countPeople: item.countPeople || 0,
           spRating: parseFloat(item.spRating) || 0,
+          priority: parseInt(item.priority) || 0,
         }));
+        console.log("Parsed parlors:", parsed);
         setBeautyParlors(parsed);
         setFilteredParlors(parsed);
         setLoading(false);
       })
       .catch((error) => {
-        // console.error("Error fetching data:", error);
+        console.error("Failed to fetch parlors:", error);
+        alert("Failed to load services. Please try again later.");
         setLoading(false);
       });
   }, []);
@@ -767,15 +1131,18 @@ const Product = () => {
     setServiceFilter(newService);
   }, [location.pathname, location.state]);
 
+  // Apply filters and sort with prioritized cards first, non-prioritized shuffled
   useEffect(() => {
     let filtered = beautyParlors;
 
+    // Apply designation filter
     if (designationFilter && designationFilter !== "All Products") {
       filtered = filtered.filter(
         (parlor) => parlor.designation === designationFilter
       );
     }
 
+    // Apply rating filter
     if (ratingFilter !== "all") {
       const selectedRange = ratingOptions.find(
         (option) => option.value === ratingFilter
@@ -789,6 +1156,7 @@ const Product = () => {
       }
     }
 
+    // Apply distance filter
     if (distanceFilter !== "all" && userLocation) {
       filtered = filtered.filter((parlor) => {
         const parlorCoords = parseParlorLocation(parlor.location);
@@ -805,16 +1173,30 @@ const Product = () => {
         if (distanceFilter === "0-1") return dist <= 1;
         if (distanceFilter === "0-3") return dist > 0 && dist <= 3;
         if (distanceFilter === "0-5") return dist > 0 && dist <= 5;
-        if (distanceFilter === "more") return dist > 0;
+        if (distanceFilter === "more") return dist > 5;
         return true;
       });
     }
 
+    // Apply service filter
     if (serviceFilter) {
       filtered = filtered.filter((parlor) => parlor.service === serviceFilter);
     }
 
-    setFilteredParlors(filtered);
+    // Separate parlors into prioritized and non-prioritized
+    const prioritized = filtered
+      .filter((parlor) => parlor.priority > 0)
+      .sort((a, b) => b.priority - a.priority); // Sort prioritized by descending priority
+    const nonPrioritized = filtered.filter((parlor) => parlor.priority === 0);
+
+    // Shuffle non-prioritized parlors
+    const shuffledNonPrioritized = shuffleArray(nonPrioritized);
+
+    // Combine prioritized and shuffled non-prioritized
+    const finalOrder = [...prioritized, ...shuffledNonPrioritized];
+
+    console.log("Sorted filtered parlors:", finalOrder);
+    setFilteredParlors(finalOrder);
   }, [
     beautyParlors,
     designationFilter,
@@ -854,21 +1236,20 @@ const Product = () => {
   return (
     <Box
       sx={{
-        backgroundColor: "#fff",
+        backgroundColor: "#f9fafb",
         minHeight: "100vh",
-        py: { xs: 3, sm: 4, md: 6 },
+        py: { xs: 4, sm: 5 },
       }}
     >
       <Container
         maxWidth="xl"
         sx={{
-          px: { xs: 1, sm: 2, md: 3 },
+          px: { xs: 2, sm: 3 },
           maxWidth: {
             xs: "100%",
-            sm: "90%",
+            sm: "95%",
             md: "1200px",
-            lg: "1600px",
-            xl: "2000px",
+            lg: "1400px",
           },
         }}
       >
@@ -877,13 +1258,14 @@ const Product = () => {
           h2.text-primary {
             font-family: 'Poppins', sans-serif;
             font-weight: 700;
-            font-size: 2.5rem;
-            background: linear-gradient(90deg,rgb(7, 24, 24),rgb(0, 0, 0));
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #201548, #1a1138);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             position: relative;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             text-align: center;
+            letter-spacing: 0.8px;
           }
 
           h2.text-primary::after {
@@ -893,37 +1275,64 @@ const Product = () => {
             left: 50%;
             transform: translateX(-50%);
             width: 100px;
-            height: 4px;
-            background: #000;
+            height: 3.5px;
+            background: linear-gradient(90deg, #201548, #1a1138);
             borderRadius: 2px;
-          }`}
+          }
+
+          @media (max-width: 600px) {
+            h2.text-primary {
+              font-size: 1.8rem;
+            }
+            h2.text-primary::after {
+              width: 70px;
+              bottom: -8px;
+            }
+          }
+
+          @media (max-width: 360px) {
+            h2.text-primary {
+              font-size: 1.6rem;
+            }
+            h2.text-primary::after {
+              width: 60px;
+            }
+          }
+
+          @media (max-width: 320px) {
+            h2.text-primary {
+              font-size: 1.4rem;
+            }
+            h2.text-primary::after {
+              width: 50px;
+            }
+          }
+          `}
         </style>
         <h2
           className="text-primary fw-bold mb-4 animate__animated animate__fadeInDown"
           style={{
             animationDuration: "1s",
-            fontSize: "1.8rem",
-            letterSpacing: "2px",
+            fontSize: { xs: "1.4rem", sm: "1.8rem", md: "2rem" },
             textTransform: "uppercase",
-            color: "#1abc9c",
           }}
         >
           Our Services
         </h2>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
           <FilterToggleButton onClick={handleToggleFilters}>
-            <FilterListIcon />
+            <FilterListIcon sx={{ fontSize: { xs: "1.3rem", sm: "1.4rem", md: "1.5rem" }, [`@media (max-width: 320px)`]: { fontSize: "1.2rem" } }} />
           </FilterToggleButton>
         </Box>
         {(showFilters || window.innerWidth >= 600) && (
           <FilterContainer>
-            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
               <StyledTextField
                 label="Your Location"
                 value={locationInput}
                 onChange={(e) => setLocationInput(e.target.value)}
                 inputRef={autocompleteInputRef}
-                placeholder="Search for any place (e.g., college, shop, park)"
+                placeholder="Search for any place (e.g., college, shop)"
               />
               <IconButton
                 onClick={() =>
@@ -936,10 +1345,14 @@ const Product = () => {
                   )
                 }
                 disabled={!userLocation}
-                color="primary"
-                sx={{ p: { xs: 0.5, sm: 1.5 } }}
+                sx={{
+                  color: "#201548",
+                  "&:hover": { backgroundColor: "#f5f5f5" },
+                  p: { xs: 1, sm: 1.2 },
+                  [`@media (max-width: 320px)`]: { p: 0.8 },
+                }}
               >
-                <i className="fa fa-map"></i>
+                <i className="fa fa-map" style={{ fontSize: { xs: "1.1rem", sm: "1.2rem" }, [`@media (max-width: 320px)`]: { fontSize: "1rem" } }}></i>
               </IconButton>
             </Box>
             <StyledFormControl>
@@ -948,6 +1361,7 @@ const Product = () => {
                 value={designationFilter}
                 onChange={handleDesignationChange}
                 label="Designation"
+                sx={{ fontSize: { xs: "0.85rem", sm: "0.9rem" }, [`@media (max-width: 320px)`]: { fontSize: "0.8rem" } }}
               >
                 <MenuItem value="All Products">All Products</MenuItem>
                 <MenuItem value="Salon">Salon</MenuItem>
@@ -961,14 +1375,15 @@ const Product = () => {
                 value={ratingFilter}
                 onChange={handleRatingChange}
                 label="Rating"
+                sx={{ fontSize: { xs: "0.85rem", sm: "0.9rem" }, [`@media (max-width: 320px)`]: { fontSize: "0.8rem" } }}
               >
                 {ratingOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Typography sx={{ color: "#fbc02d", mr: 1 }}>
+                      <Typography sx={{ color: "#fbc02d", mr: 1, fontSize: { xs: "0.85rem", sm: "0.9rem" }, [`@media (max-width: 320px)`]: { fontSize: "0.8rem" } }}>
                         {option.stars}
                       </Typography>
-                      <Typography>{option.label}</Typography>
+                      <Typography sx={{ fontSize: { xs: "0.85rem", sm: "0.9rem" }, [`@media (max-width: 320px)`]: { fontSize: "0.8rem" } }}>{option.label}</Typography>
                     </Box>
                   </MenuItem>
                 ))}
@@ -980,6 +1395,7 @@ const Product = () => {
                 value={distanceFilter}
                 onChange={handleDistanceChange}
                 label="Distance"
+                sx={{ fontSize: { xs: "0.85rem", sm: "0.9rem" }, [`@media (max-width: 320px)`]: { fontSize: "0.8rem" } }}
               >
                 <MenuItem value="all">All</MenuItem>
                 <MenuItem value="0-1">0-1 km</MenuItem>
@@ -994,6 +1410,7 @@ const Product = () => {
                 value={serviceFilter}
                 onChange={handleServiceChange}
                 label="Service"
+                sx={{ fontSize: { xs: "0.85rem", sm: "0.9rem" }, [`@media (max-width: 320px)`]: { fontSize: "0.8rem" } }}
               >
                 <MenuItem value="">All Services</MenuItem>
                 {(designationFilter === "All Products"
@@ -1009,22 +1426,21 @@ const Product = () => {
             <StyledResetButton variant="contained" onClick={handleResetFilters}>
               Reset
             </StyledResetButton>
+            <EnquiryButton
+              variant="contained"
+              onClick={handleEnquiryButtonClick}
+            >
+              Enquiry
+            </EnquiryButton>
           </FilterContainer>
         )}
-        <Grid
-          container
-          spacing={{ xs: 1, sm: 2, md: 3 }}
-          justifyContent="center"
+        <List
           sx={{
-            // "--Grid-borderWidth": "1px",
-            borderTop: "var(--Grid-borderWidth) solid",
-            borderLeft: "var(--Grid-borderWidth) solid",
-            borderColor: "divider",
-            "& > div": {
-              borderRight: "var(--Grid-borderWidth) solid",
-              borderBottom: "var(--Grid-borderWidth) solid",
-              borderColor: "divider",
-            },
+            width: "100%",
+            bgcolor: "transparent",
+            borderRadius: "12px",
+            p: { xs: 2, sm: 2.5 },
+            [`@media (max-width: 320px)`]: { p: 1.5 },
           }}
         >
           {loading ? (
@@ -1032,8 +1448,11 @@ const Product = () => {
               variant="h6"
               align="center"
               sx={{
-                fontSize: { xs: "1rem", sm: "1.25rem" },
-                gridColumn: "1 / -1", // Makes it span all columns
+                fontSize: { xs: "0.9rem", sm: "1rem", md: "1.2rem" },
+                color: "#201548",
+                padding: "16px",
+                [`@media (max-width: 360px)`]: { fontSize: "0.85rem" },
+                [`@media (max-width: 320px)`]: { fontSize: "0.8rem" },
               }}
             >
               Loading...
@@ -1043,46 +1462,317 @@ const Product = () => {
               variant="h6"
               align="center"
               sx={{
-                fontSize: { xs: "1rem", sm: "1.25rem" },
-                gridColumn: "1 / -1", // Makes it span all columns
+                fontSize: { xs: "0.9rem", sm: "1rem", md: "1.2rem" },
+                color: "#201548",
+                padding: "16px",
+                [`@media (max-width: 360px)`]: { fontSize: "0.85rem" },
+                [`@media (max-width: 320px)`]: { fontSize: "0.8rem" },
               }}
             >
               Services Not Found
             </Typography>
           ) : (
             filteredParlors.map((parlor) => (
-              <Grid
+              <ParlorListItem
                 key={parlor.id}
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  // Responsive column spans
-                  "@media (min-width:0px)": {
-                    gridColumn: "span 12",
-                  },
-                  "@media (min-width:600px)": {
-                    gridColumn: "span 6",
-                  },
-                  "@media (min-width:900px)": {
-                    gridColumn: "span 4",
-                  },
-                  "@media (min-width:1200px)": {
-                    gridColumn: "span 3",
-                  },
-                  "@media (min-width:1536px)": {
-                    gridColumn: "span 2",
-                  },
-                }}
-              >
-                <ParlorCard
-                  parlor={parlor}
-                  onImageClick={setDetailedParlor}
-                  userLocation={userLocation}
-                />
-              </Grid>
+                parlor={parlor}
+                onImageClick={setDetailedParlor}
+                userLocation={userLocation}
+              />
             ))
           )}
-        </Grid>
+        </List>
+
+        {/* Enquiry Modal */}
+        {enquiryModalOpen && (
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              zIndex: 1050,
+            }}
+          >
+            <motion.div
+              ref={modalRef}
+              className="bg-white rounded-4 shadow-lg p-4 mx-3"
+              style={{
+                maxWidth: "600px",
+                width: "100%",
+                maxHeight: "90vh",
+                overflowY: "auto",
+              }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h3
+                  className="m-0"
+                  style={{
+                    color: "#201548",
+                    fontSize: { xs: "1.3rem", sm: "1.4rem", md: "1.5rem" },
+                    [`@media (max-width: 360px)`]: { fontSize: "1.2rem" },
+                    [`@media (max-width: 320px)`]: { fontSize: "1.1rem" },
+                  }}
+                >
+                  Service Enquiry
+                </h3>
+                <button
+                  className="btn border-0"
+                  onClick={handleCloseModal}
+                  style={{ color: "#201548" }}
+                >
+                  <i className="bi bi-x-lg" style={{ fontSize: { xs: "1.1rem", sm: "1.2rem" }, [`@media (max-width: 320px)`]: { fontSize: "1rem" } }}></i>
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label fw-semibold text-dark">
+                  Select Designation
+                </label>
+                <StyledFormControl fullWidth>
+                  <InputLabel>Designation</InputLabel>
+                  <Select
+                    value={selectedDesignation}
+                    onChange={(e) => setSelectedDesignation(e.target.value)}
+                    label="Designation"
+                    sx={{ fontSize: { xs: "0.85rem", sm: "0.9rem" }, [`@media (max-width: 320px)`]: { fontSize: "0.8rem" } }}
+                  >
+                    <MenuItem value="">Select Designation</MenuItem>
+                    <MenuItem value="Salon">Salon</MenuItem>
+                    <MenuItem value="Beauty_Parler">Beauty Parlor</MenuItem>
+                    <MenuItem value="Doctor">Doctor</MenuItem>
+                  </Select>
+                </StyledFormControl>
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label fw-semibold text-dark">
+                  Service Providers (Within 5 km)
+                </label>
+                {selectedDesignation &&
+                serviceProviders.filter(
+                  (provider) => provider.designation === selectedDesignation
+                ).length === 0 ? (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#666",
+                      fontStyle: "italic",
+                      fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                      padding: "8px 12px",
+                      [`@media (max-width: 320px)`]: { fontSize: "0.75rem" },
+                    }}
+                  >
+                    No providers within 5 km for {selectedDesignation}
+                  </Typography>
+                ) : !selectedDesignation ? (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#666",
+                      fontStyle: "italic",
+                      fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                      padding: "8px 12px",
+                      [`@media (max-width: 320px)`]: { fontSize: "0.75rem" },
+                    }}
+                  >
+                    Please select a designation
+                  </Typography>
+                ) : (
+                  <Box
+                    sx={{
+                      maxHeight: "200px",
+                      overflowY: "auto",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "8px",
+                      p: 1.5,
+                      bgcolor: "#fafafa",
+                      [`@media (max-width: 320px)`]: { maxHeight: "180px", p: 1 },
+                    }}
+                  >
+                    {serviceProviders
+                      .filter(
+                        (provider) => provider.designation === selectedDesignation
+                      )
+                      .map((provider) => {
+                        const providerCoords = parseParlorLocation(
+                          provider.location
+                        );
+                        const distance = providerCoords
+                          ? calculateDistance(
+                              userLocation.lat,
+                              userLocation.lon,
+                              providerCoords.lat,
+                              providerCoords.lon
+                            )
+                          : null;
+                        return (
+                          <Box
+                            key={provider._id}
+                            sx={{
+                              p: 1.5,
+                              borderBottom: "1px solid #e0e0e0",
+                              "&:last-child": { borderBottom: "none" },
+                              bgcolor: "#ffffff",
+                              borderRadius: "6px",
+                              mb: 0.5,
+                              [`@media (max-width: 320px)`]: { p: 1 },
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: "bold",
+                                color: "#201548",
+                                fontSize: { xs: "0.85rem", sm: "0.9rem", md: "0.95rem" },
+                                [`@media (max-width: 320px)`]: { fontSize: "0.8rem" },
+                              }}
+                            >
+                              {provider.shopName}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#0e0f0f",
+                                fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                                [`@media (max-width: 320px)`]: { fontSize: "0.75rem" },
+                              }}
+                            >
+                              {provider.designation} | Rating: {provider.spRating}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#666",
+                                fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                                [`@media (max-width: 320px)`]: { fontSize: "0.75rem" },
+                              }}
+                            >
+                              Distance: {distance || "Unknown"} km
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                  </Box>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label
+                  htmlFor="enquiryMessage"
+                  className="form-label fw-semibold text-dark"
+                  style={{ fontSize: { xs: "0.85rem", sm: "0.9rem" }, [`@media (max-width: 320px)`]: { fontSize: "0.8rem" } }}
+                >
+                  Your Message
+                </label>
+                <textarea
+                  id="enquiryMessage"
+                  className="form-control"
+                  rows="5"
+                  placeholder="Please describe what services you're interested in..."
+                  value={enquiryMessage}
+                  onChange={(e) => setEnquiryMessage(e.target.value)}
+                  style={{
+                    fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                    padding: "12px",
+                    borderRadius: "8px",
+                    [`@media (max-width: 320px)`]: { fontSize: "0.8rem", padding: "10px" },
+                  }}
+                ></textarea>
+              </div>
+
+              <div className="d-flex gap-3 justify-content-end flex-wrap">
+                <SendEnquiryButton
+                  onClick={handleSubmitEnquiry}
+                  disabled={
+                    !enquiryMessage ||
+                    !selectedDesignation ||
+                    serviceProviders.filter(
+                      (provider) => provider.designation === selectedDesignation
+                    ).length === 0
+                  }
+                >
+                  Send Enquiry
+                </SendEnquiryButton>
+                <Button
+                  variant="outlined"
+                  onClick={handleCloseModal}
+                  sx={{
+                    borderColor: "#201548",
+                    color: "#201548",
+                    "&:hover": { borderColor: "#1a1138", color: "#1a1138" },
+                    fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                    padding: { xs: "8px 20px", sm: "10px 24px" },
+                    borderRadius: "8px",
+                    textTransform: "none",
+                    [`@media (max-width: 320px)`]: { fontSize: "0.75rem", padding: "6px 16px" },
+                  }}
+                >
+                  Close
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Success Dialog */}
+        <Dialog
+          open={successDialogOpen}
+          onClose={handleSuccessDialogClose}
+          aria-labelledby="success-dialog-title"
+          PaperProps={{
+            sx: {
+              borderRadius: "12px",
+              padding: { xs: "12px", sm: "16px" },
+              [`@media (max-width: 320px)`]: { padding: "10px" },
+            },
+          }}
+        >
+          <DialogTitle
+            id="success-dialog-title"
+            sx={{
+              fontSize: { xs: "1.1rem", sm: "1.2rem", md: "1.4rem" },
+              color: "#201548",
+              padding: "12px 16px",
+              [`@media (max-width: 320px)`]: { fontSize: "1rem" },
+            }}
+          >
+            Success
+          </DialogTitle>
+          <DialogContent>
+            <Typography
+              sx={{
+                fontSize: { xs: "0.85rem", sm: "0.9rem", md: "1rem" },
+                color: "#0e0f0f",
+                padding: "8px 12px",
+                [`@media (max-width: 320px)`]: { fontSize: "0.8rem" },
+              }}
+            >
+              Enquiry sent successfully to all {selectedDesignation} providers!
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleSuccessDialogClose}
+              sx={{
+                backgroundColor: "#201548",
+                color: "#ffffff",
+                "&:hover": { backgroundColor: "#1a1138" },
+                fontSize: { xs: "0.8rem", sm: "0.85rem" },
+                padding: { xs: "8px 20px", sm: "10px 24px" },
+                borderRadius: "8px",
+                textTransform: "none",
+                [`@media (max-width: 320px)`]: {
+                  fontSize: "0.75rem",
+                  padding: "6px 16px",
+                },
+              }}
+            >
+              OK
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );

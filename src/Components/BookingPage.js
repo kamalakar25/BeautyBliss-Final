@@ -619,13 +619,17 @@ const BookingPage = () => {
           }
           .action-cancel {
             cursor: pointer;
-            color: #201548;
+            color:rgb(34, 20, 9);
             display: flex;
             align-items: center;
             gap: 0.3rem;
+                 background:rgb(224, 41, 41);
+                 padding: 0.2rem;
+                 border-radius: 5px;
           }
           .action-cancel i {
-            color: #201548;
+            color:rgb(38, 23, 11);
+       
           }
           .action-cancel:hover {
             color: #1a1138;
@@ -645,8 +649,7 @@ const BookingPage = () => {
               font-size: 0.8rem;
             }
             th:nth-child(4), td:nth-child(4),
-            th:nth-child(10), td:nth-child(10),
-            th:nth-child(14), td:nth-child(14) {
+            th:nth-child(10), td:nth-child(10),{
               display: none;
             }
             .filter-btn {
@@ -690,8 +693,7 @@ const BookingPage = () => {
               border-bottom: 1px solid #e8ecef;
             }
             td:nth-child(4),
-            td:nth-child(10),
-            td:nth-child(14) {
+            td:nth-child(10),{
               display: none;
             }
             .table-container {

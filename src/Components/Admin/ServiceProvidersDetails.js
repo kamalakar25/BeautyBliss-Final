@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Box, IconButton } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { styled } from "@mui/material/styles";
+import debounce from "lodash/debounce";
 
 // Styled FilterToggleButton
 const FilterToggleButton = styled(IconButton)(({ theme }) => ({
@@ -171,39 +172,71 @@ const ServiceProviderDetails = () => {
   const [error, setError] = useState("");
   const itemsPerPage = 5;
 
-  const BASE_URL = process.env.REACT_APP_API_URL;
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchServiceProviders = async () => {
       try {
+        console.log("Fetching from:", `${BASE_URL}/api/main/admin/get/all/service-providers`);
         const response = await axios.get(
           `${BASE_URL}/api/main/admin/get/all/service-providers`
         );
-        const providers = response.data;
-        setServiceProviders(providers.reverse());
-        setFilteredProviders(providers);
+        console.log("API response:", response.data);
+
+        if (!Array.isArray(response.data) || response.data.length === 0) {
+          setError("No service providers found in the database.");
+          setServiceProviders([]);
+          setFilteredProviders([]);
+          return;
+        }
+
+        // Normalize data to ensure all expected fields are present
+        const normalizedProviders = response.data.map((provider) => ({
+          _id: provider._id || "",
+          name: provider.name || "N/A",
+          email: provider.email || "N/A",
+          phone: provider.phone || "N/A",
+          shopName: provider.shopName || "N/A",
+          designation: provider.designation || "N/A",
+          location: provider.location || "N/A",
+          spAddress: provider.spAddress || "N/A",
+          createdAt: provider.createdAt || null,
+          priority: provider.priority !== undefined ? parseInt(provider.priority) : 0,
+        }));
+
+        console.log("Normalized providers:", normalizedProviders);
+        setServiceProviders(normalizedProviders.reverse());
+        setFilteredProviders(normalizedProviders);
       } catch (error) {
-        setError("Failed to load service providers. Please try again.");
+        console.error("Fetch error:", error);
+        setError(
+          error.response
+            ? `Failed to load service providers: ${error.response.data.message || error.message}`
+            : "Failed to connect to the server. Please check your network or server status."
+        );
+        setServiceProviders([]);
+        setFilteredProviders([]);
       }
     };
     fetchServiceProviders();
   }, []);
 
   useEffect(() => {
-    let filtered = serviceProviders;
+    let filtered = [...serviceProviders];
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((provider) => {
         const fieldsToSearch = [
-          provider.name || "",
-          provider.email || "",
-          provider.phone || "",
-          provider.shopName || "",
-          provider.designation || "",
-          provider.location || "",
-          formatDate(provider.createdAt) || "",
-          // formatDate(provider.dob) || "",
+          provider.name,
+          provider.email,
+          provider.phone,
+          provider.shopName,
+          provider.designation,
+          provider.location,
+          provider.spAddress,
+          formatDate(provider.createdAt),
+          String(provider.priority),
         ];
         return fieldsToSearch.some((field) =>
           field.toLowerCase().includes(query)
@@ -234,9 +267,104 @@ const ServiceProviderDetails = () => {
       });
     }
 
+    console.log("Filtered providers:", filtered);
     setFilteredProviders(filtered);
     setCurrentPage(1);
   }, [searchQuery, startDateFilter, endDateFilter, serviceProviders]);
+
+  // Debounced API call for priority update
+  const updatePriorityAPI = useCallback(
+    debounce(async (providerId, newPriority) => {
+      try {
+        const response = await axios.put(
+          `${BASE_URL}/api/main/admin/update-priority/${providerId}`,
+          { priority: newPriority },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        console.log("Priority update response:", response.data);
+        // Refetch service providers to ensure UI is in sync with backend
+        const fetchResponse = await axios.get(
+          `${BASE_URL}/api/main/admin/get/all/service-providers`
+        );
+        const normalizedProviders = fetchResponse.data.map((provider) => ({
+          _id: provider._id || "",
+          name: provider.name || "N/A",
+          email: provider.email || "N/A",
+          phone: provider.phone || "N/A",
+          shopName: provider.shopName || "N/A",
+          designation: provider.designation || "N/A",
+          location: provider.location || "N/A",
+          spAddress: provider.spAddress || "N/A",
+          createdAt: provider.createdAt || null,
+          priority: provider.priority !== undefined ? parseInt(provider.priority) : 0,
+        }));
+        setServiceProviders(normalizedProviders.reverse());
+        setFilteredProviders(normalizedProviders);
+        alert("Priority updated successfully.");
+      } catch (error) {
+        console.error("Priority update error:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+          providerId,
+          newPriority,
+        });
+        setError(
+          error.response?.data?.message
+            ? `Failed to update priority: ${error.response.data.message}`
+            : error.response
+            ? `Failed to update priority: ${error.response.status} - ${
+                error.response.data?.error || "Shop not found"
+              }`
+            : "Failed to update priority. Please check your network or server status."
+        );
+        // Revert optimistic update on failure
+        setServiceProviders((prev) =>
+          prev.map((provider) =>
+            provider._id === providerId
+              ? { ...provider, priority: provider.priority }
+              : provider
+          )
+        );
+        setFilteredProviders((prev) =>
+          prev.map((provider) =>
+            provider._id === providerId
+              ? { ...provider, priority: provider.priority }
+              : provider
+          )
+        );
+      }
+    }, 500),
+    []
+  );
+
+  const handlePriorityChange = (providerId, value) => {
+    // Convert input to number, default to 0 if empty or invalid
+    const newPriority = value === "" ? 0 : parseInt(value);
+    if (isNaN(newPriority) || newPriority < 0) {
+      setError("Priority must be a non-negative number.");
+      return;
+    }
+
+    // Optimistic UI update
+    setServiceProviders((prev) =>
+      prev.map((provider) =>
+        provider._id === providerId
+          ? { ...provider, priority: newPriority }
+          : provider
+      )
+    );
+    setFilteredProviders((prev) =>
+      prev.map((provider) =>
+        provider._id === providerId
+          ? { ...provider, priority: newPriority }
+          : provider
+      )
+    );
+
+    // Trigger debounced API update
+    updatePriorityAPI(providerId, newPriority);
+  };
 
   const handleDelete = async () => {
     if (providerToDelete) {
@@ -256,8 +384,14 @@ const ServiceProviderDetails = () => {
         );
         setShowModal(false);
         setProviderToDelete(null);
+        alert("Service provider deleted successfully.");
       } catch (error) {
-        setError("Failed to delete service provider. Please try again.");
+        console.error("Delete error:", error);
+        setError(
+          error.response
+            ? `Failed to delete service provider: ${error.response.data.message}`
+            : "Failed to delete service provider. Please try again."
+        );
       }
     }
   };
@@ -402,7 +536,7 @@ const ServiceProviderDetails = () => {
                 <Box
                   component="input"
                   type="text"
-                  placeholder="Search by name or email..."
+                  placeholder="Search by name, email, or priority..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   sx={{
@@ -428,7 +562,7 @@ const ServiceProviderDetails = () => {
                     },
                   }}
                 />
-                <FilterToggleButton onClick={handleToggleFilters} style={{borderRadius:"20px"}}> 
+                <FilterToggleButton onClick={handleToggleFilters} style={{ borderRadius: "20px" }}>
                   <FilterListIcon />
                 </FilterToggleButton>
               </Box>
@@ -524,7 +658,6 @@ const ServiceProviderDetails = () => {
                       }}
                     />
                   </Box>
-                  
                   <Box
                     sx={{
                       display: "flex",
@@ -595,7 +728,6 @@ const ServiceProviderDetails = () => {
                     fontWeight: "medium",
                     color: "#fff",
                     marginTop: "30px !important",
-
                     cursor:
                       !searchQuery && !startDateFilter && !endDateFilter
                         ? "not-allowed"
@@ -664,10 +796,10 @@ const ServiceProviderDetails = () => {
                   "Email",
                   "Shop Name",
                   "Phone",
-                  // "DOB",
                   "Designation",
                   "Address",
                   "Date of Join",
+                  "Priority",
                   "Actions",
                 ].map((header, idx) => (
                   <Box
@@ -698,7 +830,7 @@ const ServiceProviderDetails = () => {
                   provider.location
                 );
                 const displayLocation =
-                  addresses[provider._id] ||
+                  provider.spAddress ||
                   (latitude && longitude
                     ? `${latitude}, ${longitude}`
                     : provider.location || "N/A");
@@ -743,7 +875,7 @@ const ServiceProviderDetails = () => {
                         },
                       }}
                     >
-                      {provider.name || "N/A"}
+                      {provider.name}
                     </Box>
                     <Box
                       component="td"
@@ -762,7 +894,7 @@ const ServiceProviderDetails = () => {
                         },
                       }}
                     >
-                      {provider.email || "N/A"}
+                      {provider.email}
                     </Box>
                     <Box
                       component="td"
@@ -781,7 +913,7 @@ const ServiceProviderDetails = () => {
                         },
                       }}
                     >
-                      {provider.shopName || "N/A"}
+                      {provider.shopName}
                     </Box>
                     <Box
                       component="td"
@@ -800,27 +932,8 @@ const ServiceProviderDetails = () => {
                         },
                       }}
                     >
-                      {provider.phone || "N/A"}
+                      {provider.phone}
                     </Box>
-                    {/* <Box
-                      component="td"
-                      sx={{
-                        p: "14px",
-                        fontSize: "0.95rem",
-                        textAlign: "center",
-                        border: "1pxsolid #e2e8f0",
-                        color: "#0e0f0f",
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        backdropFilter: "blur(4px)",
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          backgroundColor: "#ffffff",
-                          boxShadow: "0 2px 8px rgba(32, 21, 72, 0.2)",
-                        },
-                      }}
-                    >
-                      {formatDate(provider.dob)}
-                    </Box> */}
                     <Box
                       component="td"
                       sx={{
@@ -838,7 +951,7 @@ const ServiceProviderDetails = () => {
                         },
                       }}
                     >
-                      {provider.designation || "N/A"}
+                      {provider.designation}
                     </Box>
                     <Box
                       component="td"
@@ -909,19 +1022,21 @@ const ServiceProviderDetails = () => {
                       ) : (
                         displayLocation
                       )}
-                      <Box
-                        sx={{
-                          maxHeight: "40px",
-                          overflowY: "auto",
-                          mt: 1,
-                          whiteSpace: "normal",
-                          wordBreak: "break-word",
-                          fontSize: "0.8rem",
-                          color: "#0e0f0f",
-                        }}
-                      >
-                        {provider.spAddress ? provider.spAddress : "N/A"}
-                      </Box>
+                      {provider.spAddress !== "N/A" && (
+                        <Box
+                          sx={{
+                            maxHeight: "40px",
+                            overflowY: "auto",
+                            mt: 1,
+                            whiteSpace: "normal",
+                            wordBreak: "break-word",
+                            fontSize: "0.8rem",
+                            color: "#0e0f0f",
+                          }}
+                        >
+                          {provider.spAddress}
+                        </Box>
+                      )}
                     </Box>
                     <Box
                       component="td"
@@ -946,11 +1061,51 @@ const ServiceProviderDetails = () => {
                       component="td"
                       sx={{
                         p: "14px",
+                        fontSize: "0.95rem",
+                        textAlign: "center",
+                        border: "1px solid #e2e8f0",
+                        color: "#0e0f0f",
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        backdropFilter: "blur(4px)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          backgroundColor: "#ffffff",
+                          boxShadow: "0 2px 8px rgba(32, 21, 72, 0.2)",
+                        },
+                      }}
+                    >
+                      <Box
+                        component="input"
+                        type="number"
+                        min="0"
+                        value={provider.priority}
+                        onChange={(e) => handlePriorityChange(provider._id, e.target.value)}
+                        sx={{
+                          width: "60px",
+                          p: "5px",
+                          borderRadius: "4px",
+                          border: "1px solid #201548",
+                          textAlign: "center",
+                          fontSize: "0.9rem",
+                          "&:focus": {
+                            borderColor: "#201548",
+                            boxShadow: "0 0 5px rgba(32, 21, 72, 0.3)",
+                            outline: "none",
+                          },
+                          "&:hover": {
+                            borderColor: "#201548",
+                          },
+                        }}
+                      />
+                    </Box>
+                    <Box
+                      component="td"
+                      sx={{
+                        p: "14px",
                         textAlign: "center",
                         width: "150px",
                         display: "flex",
                         justifyContent: "center",
-                        // border: "1px solid #e2 e8f0",
                         backgroundColor: "transparent",
                       }}
                     >
@@ -1133,7 +1288,6 @@ const ServiceProviderDetails = () => {
                 sx={{
                   fontSize: { xs: 48, sm: 56 },
                   color: "#201548",
-                  // border:"none"
                 }}
               />
             </Box>

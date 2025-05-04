@@ -26,7 +26,7 @@ const Home = () => {
   const [addresses, setAddresses] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-    const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const itemsPerPage = 5;
 
   const slides = [
@@ -76,18 +76,18 @@ const Home = () => {
     },
   ];
 
-    const nextSlide = () => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    };
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
 
-    const prevSlide = () => {
-      setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-    };
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
 
-      useEffect(() => {
-        const interval = setInterval(nextSlide, 5000);
-        return () => clearInterval(interval);
-      }, []);
+  useEffect(() => {
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleClick = () => {
     navigate("/salon");
@@ -322,6 +322,13 @@ const Home = () => {
       alert("Failed to submit enquiry. Please try again.");
     }
   };
+  const handleEnquiryClick = () => {
+   
+    navigate("/products", { state: { openEnquiryModal: true } });
+    
+      alert("Please set your location to proceed with the enquiry.");
+    
+  };
 
   return (
     <div
@@ -394,7 +401,7 @@ const Home = () => {
                     >
                       {slide.description}
                     </motion.p>
-                   
+
                   </div>
                 </div>
               );
@@ -418,9 +425,8 @@ const Home = () => {
             {slides.map((_, index) => (
               <button
                 key={index}
-                className={`indicator ${
-                  index === currentSlide % slides.length ? "active" : ""
-                }`}
+                className={`indicator ${index === currentSlide % slides.length ? "active" : ""
+                  }`}
                 onClick={() => setCurrentSlide(index)}
                 aria-label={`Go to slide ${index + 1}`}
               ></button>
@@ -974,7 +980,7 @@ const Home = () => {
               </div>
               <div className="btn-conteiner">
                 <button
-                  onClick={() => setEnquiryModalOpen(true)}
+                  onClick={handleEnquiryClick}
                   className="btn-content"
                 >
                   <span>Enquiry</span>

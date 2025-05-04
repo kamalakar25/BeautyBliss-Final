@@ -953,7 +953,7 @@ const Product = () => {
               providerCoords.lat,
               providerCoords.lon
             );
-            return distance !== null && distance <= 5;
+            return distance !== null && distance <= 20;
           });
           console.log("Filtered service providers:", filteredProviders);
           setServiceProviders(filteredProviders);
@@ -991,7 +991,7 @@ const Product = () => {
 
     if (filteredProviders.length === 0) {
       alert(
-        `No service providers available within 5 km for ${selectedDesignation}.`
+        `No service providers available in your area for ${selectedDesignation}.`
       );
       return;
     }
@@ -1548,7 +1548,7 @@ const Product = () => {
 
               <div className="mb-4">
                 <label className="form-label fw-semibold text-dark">
-                  Service Providers (Within 5 km)
+                  Service Providers 
                 </label>
                 {selectedDesignation &&
                 serviceProviders.filter(
@@ -1564,7 +1564,7 @@ const Product = () => {
                       [`@media (max-width: 320px)`]: { fontSize: "0.75rem" },
                     }}
                   >
-                    No providers within 5 km for {selectedDesignation}
+                    No providers found for {selectedDesignation}
                   </Typography>
                 ) : !selectedDesignation ? (
                   <Typography

@@ -975,7 +975,7 @@ const Home = () => {
 
               <div className="btn-conteiner">
                 <a href="/skincare" className="btn-content">
-                  <span>Skincare</span>
+                  <span>Doctor</span>
                 </a>
               </div>
               <div className="btn-conteiner">

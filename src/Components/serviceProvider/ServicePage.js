@@ -614,7 +614,7 @@ const ServicePage = () => {
                       className="service-image"
                       onError={(e) => {
                         e.target.src = "/images/placeholder.jpg";
-                        console.error("Error loading image:", svc.shopImage);
+                        // console.error("Error loading image:", svc.shopImage);
                       }}
                     />
                   ) : (

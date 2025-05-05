@@ -325,6 +325,16 @@ const ServicePage = () => {
     indexOfFirstService,
     indexOfLastService
   );
+
+  console.log(currentServices);
+
+  const getImageUrl = (shopImage) => {
+    if (!shopImage) return "/images/placeholder.jpg";
+    // Normalize backslashes to forward slashes
+    const normalizedPath = shopImage.replace(/\\/g, "/");
+    return `${BASE_URL.replace(/\/$/, "")}/${normalizedPath}`;
+  };
+
   const totalPages = Math.ceil(services.length / servicesPerPage);
 
   const handleNextPage = () => {
@@ -423,6 +433,16 @@ const ServicePage = () => {
                     // );
                   }}
                 />
+
+                // <img
+                //   src={getImageUrl(formData.imagePreview)}
+                //   alt="Preview"
+                //   className="image-preview"
+                //   onError={(e) => {
+                //     e.target.src = "/images/placeholder.jpg";
+                //     // console.error('Error loading image:', svc.shopImage);
+                //   }}
+                // />
               )}
 
               <div className="form-actions">
@@ -609,12 +629,12 @@ const ServicePage = () => {
                   <strong className="field-label">Image:</strong>
                   {svc.shopImage ? (
                     <img
-                      src={`${BASE_URL}/${svc.shopImage}`}
+                      src={getImageUrl(svc.shopImage)}
                       alt={svc.serviceName}
                       className="service-image"
                       onError={(e) => {
                         e.target.src = "/images/placeholder.jpg";
-                        // console.error("Error loading image:", svc.shopImage);
+                        // console.error('Error loading image:', svc.shopImage);
                       }}
                     />
                   ) : (
@@ -885,7 +905,7 @@ const ServicePage = () => {
                     <td>
                       {svc.shopImage ? (
                         <img
-                          src={`${BASE_URL}/${svc.shopImage}`}
+                          src={getImageUrl(svc.shopImage)}
                           alt={svc.serviceName}
                           className="service-image"
                           onError={(e) => {
